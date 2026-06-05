@@ -1,0 +1,214 @@
+{
+  "info": {
+    "name": "AI-Genius JWT Auth — Web Assignment 03",
+    "_postman_id": "ai-genius-assignment-03",
+    "description": "Demonstrates full JWT authentication workflow: Login → Access Protected API → Token Expires → Refresh Token → Access Denied on unauthorized roles",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔑 Auth",
+      "item": [
+        {
+          "name": "1. Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('access_token', res.accessToken);",
+                  "  console.log('✅ Access token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@aigenius.com\",\n  \"password\": \"Admin@1234\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "2. Login as Premium User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) pm.collectionVariables.set('access_token', res.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"premium@aigenius.com\",\n  \"password\": \"Premium@1234\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "3. Login as Free User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) pm.collectionVariables.set('access_token', res.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"free@aigenius.com\",\n  \"password\": \"Free@1234\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "4. Refresh Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('access_token', res.accessToken);",
+                  "  console.log('✅ New access token saved from refresh');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "raw", "raw": "" },
+            "url": { "raw": "{{base_url}}/api/auth/refresh", "host": ["{{base_url}}"], "path": ["api", "auth", "refresh"] },
+            "description": "Refresh token is sent automatically via the httpOnly cookie set during login."
+          }
+        },
+        {
+          "name": "5. Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/auth/logout", "host": ["{{base_url}}"], "path": ["api", "auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🤖 AI Endpoints",
+      "item": [
+        {
+          "name": "6. GET Free Model (All users)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/ai/free-model", "host": ["{{base_url}}"], "path": ["api", "ai", "free-model"] },
+            "description": "Accessible by all logged-in users. Login as any user first."
+          }
+        },
+        {
+          "name": "7. POST Premium Model (Premium + Admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Write a short poem about artificial intelligence\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/ai/premium-model", "host": ["{{base_url}}"], "path": ["api", "ai", "premium-model"] },
+            "description": "Login as admin or premium user first. Free_User will get 403 Forbidden."
+          }
+        },
+        {
+          "name": "8. DELETE Purge Cache (Admin only)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/ai/purge-cache", "host": ["{{base_url}}"], "path": ["api", "ai", "purge-cache"] },
+            "description": "Login as admin first. Premium_User and Free_User will get 403 Forbidden."
+          }
+        }
+      ]
+    },
+    {
+      "name": "❌ Error Cases",
+      "item": [
+        {
+          "name": "9. No Token (401 Unauthorized)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/ai/free-model", "host": ["{{base_url}}"], "path": ["api", "ai", "free-model"] },
+            "description": "No Authorization header. Should return 401."
+          }
+        },
+        {
+          "name": "10. Wrong Password (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@aigenius.com\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "11. Free User → Premium Model (403 Forbidden)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"prompt\": \"test\" }" },
+            "url": { "raw": "{{base_url}}/api/ai/premium-model", "host": ["{{base_url}}"], "path": ["api", "ai", "premium-model"] },
+            "description": "Login as free@aigenius.com first, then run this. Should return 403."
+          }
+        },
+        {
+          "name": "12. Premium User → Purge Cache (403 Forbidden)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/ai/purge-cache", "host": ["{{base_url}}"], "path": ["api", "ai", "purge-cache"] },
+            "description": "Login as premium@aigenius.com first, then run this. Should return 403."
+          }
+        }
+      ]
+    }
+  ]
+}
